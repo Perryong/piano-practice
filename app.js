@@ -8,6 +8,7 @@ const library=()=>[...exercises,...imported];
 let song=library()[Number.isInteger(saved.song)?Math.min(Math.max(0,saved.song),library().length-1):0],steps=buildSteps(song),position=0;
 let bpm=Number.isFinite(saved.bpm)?Math.min(120,Math.max(20,saved.bpm)):60;
 let hand=['left','right','both'].includes(saved.hand)?saved.hand:'both',repeat=false;
+let fullBars=[],fullCells=[],activeFullBar=null,activeFullCell=null;
 let audio=null,wave=null,playing=false,starting=false,timer=null,voices=new Set(),queue=[],scheduled=0,nextAt=0,finishAt=null,first=true,finished=false,session=0;
 function message(text) { $('notice').textContent=text;$('notice').hidden=!text; }
 function persist() {
@@ -25,7 +26,7 @@ function renderLibrary() {
 function selectSong(item) {
   stop();song=item;steps=buildSteps(song);position=0;finished=false;
   $('song-title').textContent=song.title;$('song-description').textContent=song.composer||'Your personal practice piece';
-  $('bar').replaceChildren(...song.bars.map((_,i)=>new Option(String(i+1),String(i))));renderLibrary();render();persist();
+  $('bar').replaceChildren(...song.bars.map((_,i)=>new Option(String(i+1),String(i))));renderLibrary();renderFullPiece();render();persist();
 }
 function keyboard(element,low,high,left,right,labels=false,fingerLabels=new Map()) {
   const whites=[];for(let n=low;n<=high;n++)if(!noteName(n).includes('#'))whites.push(n);
@@ -50,6 +51,49 @@ function handDisplay(which,event) {
 }
 const noteDescription = e => !e.enabled?'not playing':e.shared&&!e.notes.length?'shared key, use right hand':e.notes.map((n,i)=>n+(e.fingers[i]?' finger '+e.fingers[i]:'')).join(', ')||'rest';
 function countLabel(step) { const t=step.tick*step.unit;return step.meter==='12/8'?(Math.floor(t/3)+1)+(Number.isInteger(t)?['',' and',' a'][t%3]:' +'):(Math.floor(t/2)+1)+['',' e',' and',' a'][Math.round(t*2)%4];}
+function makeStepCell(step,index,interactive=false) {
+  const cell=document.createElement(interactive?'button':'div');cell.className='step';
+  if(interactive)cell.type='button';else cell.setAttribute('role','group');
+  cell.setAttribute('aria-label',`Step ${step.tick+1}, left ${noteDescription(handView(step,'left',hand))}, right ${noteDescription(handView(step,'right',hand))}`);
+  if(interactive)cell.setAttribute('aria-current',index===position?'step':'false');
+  const count=document.createElement('small');count.textContent=countLabel(step);cell.append(count);
+  for(const which of ['left','right']){
+    const label=document.createElement('span');label.className=which==='left'?'note-l':'note-r';
+    const e=handView(step,which,hand);
+    label.textContent=(which==='left'?'L ':'R ')+(e.shared&&!e.notes.length?'Use R':e.notes.length?(!e.press?'Hold'+(interactive?'':' '+e.notes.join('+')):e.notes.join('+')):'—');
+    if(e.notes.length&&e.fingers.length){const f=document.createElement('span');f.className='step-fingers';f.textContent='Finger '+e.fingers.join('+');label.append(f);}
+    cell.append(label);
+  }
+  if(interactive)cell.addEventListener('click',()=>{stop();finished=false;position=index;render();});
+  return cell;
+}
+function renderFullPiece() {
+  const groups=song.bars.map(()=>[]);steps.forEach((step,index)=>groups[step.bar].push({step,index}));
+  const fragment=document.createDocumentFragment();fullBars=[];fullCells=[];activeFullBar=null;activeFullCell=null;
+  groups.forEach((group,barIndex)=>{
+    const bar=document.createElement('section');bar.className='piece-bar';
+    const heading=document.createElement('div');heading.className='piece-bar-heading';
+    const title=document.createElement('h3'),button=document.createElement('button');button.type='button';button.className='piece-bar-button';button.textContent='Bar '+(barIndex+1);button.setAttribute('aria-label','Practise bar '+(barIndex+1));
+    button.id='full-bar-'+(barIndex+1);bar.setAttribute('aria-labelledby',button.id);
+    button.addEventListener('click',()=>{stop();finished=false;position=group[0].index;render();});
+    title.append(button);const meter=document.createElement('span');meter.textContent=group[0].step.meter;heading.append(title,meter);
+    const grid=document.createElement('div');grid.className='step-grid'+(group[0].step.meter==='12/8'?' compound':'');
+    for(const {step,index} of group){const cell=makeStepCell(step,index);fullCells[index]=cell;grid.append(cell);}
+    bar.append(heading,grid);fullBars.push(bar);fragment.append(bar);
+  });
+  $('full-piece').replaceChildren(fragment);$('full-piece-count').textContent=song.bars.length+' bars';
+}
+function updateFullPiece() {
+  const bar=fullBars[steps[position].bar],cell=fullCells[position];
+  if(activeFullBar!==bar){
+    if(activeFullBar){activeFullBar.classList.remove('active');activeFullBar.querySelector('button').removeAttribute('aria-current');}
+    bar.classList.add('active');bar.querySelector('button').setAttribute('aria-current','true');activeFullBar=bar;
+  }
+  if(activeFullCell!==cell){
+    if(activeFullCell){activeFullCell.classList.remove('active');activeFullCell.removeAttribute('aria-current');}
+    cell.classList.add('active');cell.setAttribute('aria-current','step');activeFullCell=cell;
+  }
+}
 function render() {
   const s=steps[position];$('bar-count').textContent=`Bar ${s.bar+1} of ${song.bars.length}`;$('bar').value=String(s.bar);
   const percent=Math.round(position/Math.max(1,steps.length-1)*100);$('progress-fill').style.width=percent+'%';document.querySelector('[role=progressbar]').setAttribute('aria-valuenow',String(percent));
@@ -59,11 +103,8 @@ function render() {
   handDisplay('left',left);handDisplay('right',right);
   $('count').textContent=(s.meter+' · ')+'Count '+countLabel(s);
   const barSteps=steps.map((step,i)=>({...step,index:i})).filter(step=>step.bar===s.bar);$('steps').classList.toggle('compound',s.meter==='12/8');$('steps').replaceChildren();
-  for(const step of barSteps){const button=document.createElement('button');button.type='button';button.className='step'+(step.index===position?' active':'');button.setAttribute('aria-label',`Step ${step.tick+1}, left ${noteDescription(handView(step,'left',hand))}, right ${noteDescription(handView(step,'right',hand))}`);button.setAttribute('aria-current',step.index===position?'step':'false');
-    const count=document.createElement('small');count.textContent=countLabel(step);button.append(count);
-    for(const which of ['left','right']){const label=document.createElement('span');label.className=which==='left'?'note-l':'note-r';const e=handView(step,which,hand);label.textContent=(which==='left'?'L ':'R ')+(e.shared&&!e.notes.length?'Use R':e.notes.length?(e.press?e.notes.join('+'):'Hold'):'—');if(e.notes.length&&e.fingers.length){const f=document.createElement('span');f.className='step-fingers';f.textContent='Finger '+e.fingers.join('+');label.append(f);}button.append(label);}
-    button.addEventListener('click',()=>{stop();finished=false;position=step.index;render();});$('steps').append(button);
-  }
+  for(const step of barSteps){const cell=makeStepCell(step,step.index,true);cell.classList.toggle('active',step.index===position);$('steps').append(cell);}
+  updateFullPiece();
   $('previous').disabled=position===0;$('next').disabled=position===steps.length-1;
 }
 function stop() {
@@ -111,7 +152,7 @@ $('next').addEventListener('click',()=>{stop();finished=false;position=Math.min(
 $('bar').addEventListener('change',e=>{const bar=Number(e.target.value);stop();finished=false;position=steps.findIndex(s=>s.bar===bar);render();});
 $('tempo').value=String(bpm);$('tempo-value').value=String(bpm);$('hand').value=hand;
 $('tempo').addEventListener('input',()=>{const resume=playing;stop();bpm=Number($('tempo').value);$('tempo-value').value=String(bpm);persist();if(resume)start();});
-$('hand').addEventListener('change',()=>{const resume=playing;stop();hand=$('hand').value;render();persist();if(resume)start();});
+$('hand').addEventListener('change',()=>{const resume=playing;stop();hand=$('hand').value;renderFullPiece();render();persist();if(resume)start();});
 $('repeat').addEventListener('change',()=>{const resume=playing;stop();repeat=$('repeat').checked;if(resume)start();});
 $('import').addEventListener('click',()=>$('file').click());
 $('file').addEventListener('change',async()=>{

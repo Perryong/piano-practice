@@ -49,3 +49,7 @@ Both built-in songs include phrase-based suggestions for each hand. Numbers appe
 Merry Christmas bar 47 gives the same E6 key to both staves. With both hands selected, the right hand plays that shared note; left-hand-only practice still shows its own finger suggestion. Notes and playback timing are unchanged.
 
 Practice imports may optionally include a `fingers` array alongside `notes`, with one integer from 1 to 5 per note, for example `{"notes":["E4"],"duration":2,"fingers":[2]}`. Files without finger numbers continue to work. Duplicate detection compares music rather than finger suggestions, so old imports do not create a second copy of a built-in song.
+
+## Full-piece view
+
+Below “This bar, step by step”, the full-piece view displays every bar of the selected practice arrangement in order, with aligned counts, left/right notes, held notes and suggested fingers. The current bar and step highlight during playback without automatically scrolling the page. Tap a bar heading to pause playback and select that bar's beginning. The overview follows the hand selection and refreshes when switching songs or importing a piece.
