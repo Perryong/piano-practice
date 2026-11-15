@@ -1,4 +1,4 @@
-import {noteNumber,noteName,frequency,validateSong,buildSteps,exercises,sameSong} from './music.js';
+import {noteNumber,noteName,frequency,validateSong,buildSteps,exercises,sameSong,handView} from './music.js';
 const $=id=>document.getElementById(id);
 const STORAGE='small-steps-piano-v1';
 let imported=[],saved={};
@@ -27,36 +27,41 @@ function selectSong(item) {
   $('song-title').textContent=song.title;$('song-description').textContent=song.composer||'Your personal practice piece';
   $('bar').replaceChildren(...song.bars.map((_,i)=>new Option(String(i+1),String(i))));renderLibrary();render();persist();
 }
-function keyboard(element,low,high,left,right,labels=false) {
+function keyboard(element,low,high,left,right,labels=false,fingerLabels=new Map()) {
   const whites=[];for(let n=low;n<=high;n++)if(!noteName(n).includes('#'))whites.push(n);
   const leftSet=new Set(left.map(noteNumber)),rightSet=new Set(right.map(noteNumber));element.replaceChildren();
   const classes=n=>leftSet.has(n)&&rightSet.has(n)?' both':leftSet.has(n)?' lh':rightSet.has(n)?' rh':'';
-  whites.forEach(n=>{const key=document.createElement('div');key.className='key-white'+classes(n);if(labels)key.textContent=noteName(n);element.append(key);});
-  for(let n=low;n<=high;n++)if(noteName(n).includes('#')){const before=whites.filter(v=>v<n).length,key=document.createElement('div');key.className='key-black'+classes(n);key.style.width=(65/whites.length)+'%';key.style.left=((before-.325)/whites.length*100)+'%';element.append(key);}
+  const badge=(key,n)=>{const finger=fingerLabels.get(n);key.dataset.note=String(n);if(labels&&Number.isInteger(finger)){const label=document.createElement('span');label.className='finger-badge';label.textContent=String(finger);key.append(label);}};
+  whites.forEach(n=>{const key=document.createElement('div');key.className='key-white'+classes(n);if(labels)key.textContent=noteName(n);badge(key,n);element.append(key);});
+  for(let n=low;n<=high;n++)if(noteName(n).includes('#')){const before=whites.filter(v=>v<n).length,key=document.createElement('div');key.className='key-black'+classes(n);key.style.width=(65/whites.length)+'%';key.style.left=((before-.325)/whites.length*100)+'%';badge(key,n);element.append(key);}
   element.setAttribute('role','img');element.setAttribute('aria-label',`Keyboard: left ${left.join(', ')||'rest'}; right ${right.join(', ')||'rest'}.`);
 }
 function handDisplay(which,event) {
-  const enabled=hand==='both'||hand===which,notes=enabled?event.notes:[];
-  $(which+'-action').textContent=!enabled?'Not playing':!notes.length?'Rest':event.press?'Press':'Hold';
+  const enabled=event.enabled,notes=event.notes;
+  const fingerNames=['','Thumb','Index finger','Middle finger','Ring finger','Little finger'];
+  $(which+'-fingers').textContent=!enabled?'':event.shared&&!notes.length?'Shared key: use your right hand':!notes.length?'':event.fingers.length?event.fingers.map((f,i)=>(notes.length>1?notes[i]+' — ':'')+'Finger '+f+' · '+fingerNames[f]).join(' / '):'No suggested fingering for this file';
+  $(which+'-action').textContent=!enabled?'Not playing':event.shared&&!notes.length?'Use right hand':!notes.length?'Rest':event.press?'Press':'Hold';
   $(which+'-note').replaceChildren();
   const text=document.createTextNode(notes.join(' + ')||'—');$(which+'-note').append(text);
   if(notes.length){const meta=document.createElement('small');meta.textContent='key '+notes.map(n=>noteNumber(n)-35).join(' + ');$(which+'-note').append(meta);}
   const preview=notes.length?notes:steps.slice(position).find(s=>s[which].notes.length)?.[which].notes||['C4'];
   const numbers=preview.map(noteNumber),base=Math.min(84,Math.floor(Math.min(...numbers)/12)*12),end=Math.max(base+12,Math.ceil(Math.max(...numbers)/12)*12);
-  keyboard($(which+'-keyboard'),base,Math.min(96,end),which==='left'?notes:[],which==='right'?notes:[],true);
+  keyboard($(which+'-keyboard'),base,Math.min(96,end),which==='left'?notes:[],which==='right'?notes:[],true,new Map(notes.map((n,i)=>[noteNumber(n),event.fingers[i]])));
 }
+const noteDescription = e => !e.enabled?'not playing':e.shared&&!e.notes.length?'shared key, use right hand':e.notes.map((n,i)=>n+(e.fingers[i]?' finger '+e.fingers[i]:'')).join(', ')||'rest';
 function countLabel(step) { const t=step.tick*step.unit;return step.meter==='12/8'?(Math.floor(t/3)+1)+(Number.isInteger(t)?['',' and',' a'][t%3]:' +'):(Math.floor(t/2)+1)+['',' e',' and',' a'][Math.round(t*2)%4];}
 function render() {
   const s=steps[position];$('bar-count').textContent=`Bar ${s.bar+1} of ${song.bars.length}`;$('bar').value=String(s.bar);
   const percent=Math.round(position/Math.max(1,steps.length-1)*100);$('progress-fill').style.width=percent+'%';document.querySelector('[role=progressbar]').setAttribute('aria-valuenow',String(percent));
-  keyboard($('keyboard'),36,96,hand==='right'?[]:s.left.notes,hand==='left'?[]:s.right.notes);
+  const left=handView(s,'left',hand),right=handView(s,'right',hand);
+  keyboard($('keyboard'),36,96,left.notes,right.notes);
   $('octaves').replaceChildren(...[36,48,60,72,84,96].map((n,i)=>{const label=document.createElement('span');label.style.left=(i===5?100:(i*7+.5)/36*100)+'%';label.textContent=noteName(n)+(n===60?' ★':'');return label;}));
-  handDisplay('left',s.left);handDisplay('right',s.right);
+  handDisplay('left',left);handDisplay('right',right);
   $('count').textContent=(s.meter+' · ')+'Count '+countLabel(s);
   const barSteps=steps.map((step,i)=>({...step,index:i})).filter(step=>step.bar===s.bar);$('steps').classList.toggle('compound',s.meter==='12/8');$('steps').replaceChildren();
-  for(const step of barSteps){const button=document.createElement('button');button.type='button';button.className='step'+(step.index===position?' active':'');button.setAttribute('aria-label',`Step ${step.tick+1}, left ${step.left.notes.join(' ')||'rest'}, right ${step.right.notes.join(' ')||'rest'}`);button.setAttribute('aria-current',step.index===position?'step':'false');
+  for(const step of barSteps){const button=document.createElement('button');button.type='button';button.className='step'+(step.index===position?' active':'');button.setAttribute('aria-label',`Step ${step.tick+1}, left ${noteDescription(handView(step,'left',hand))}, right ${noteDescription(handView(step,'right',hand))}`);button.setAttribute('aria-current',step.index===position?'step':'false');
     const count=document.createElement('small');count.textContent=countLabel(step);button.append(count);
-    for(const which of ['left','right']){const label=document.createElement('span');label.className=which==='left'?'note-l':'note-r';const e=step[which];label.textContent=(which==='left'?'L ':'R ')+(e.notes.length?(e.press?e.notes.join('+'):'Hold'):'—');button.append(label);}
+    for(const which of ['left','right']){const label=document.createElement('span');label.className=which==='left'?'note-l':'note-r';const e=handView(step,which,hand);label.textContent=(which==='left'?'L ':'R ')+(e.shared&&!e.notes.length?'Use R':e.notes.length?(e.press?e.notes.join('+'):'Hold'):'—');if(e.notes.length&&e.fingers.length){const f=document.createElement('span');f.className='step-fingers';f.textContent='Finger '+e.fingers.join('+');label.append(f);}button.append(label);}
     button.addEventListener('click',()=>{stop();finished=false;position=step.index;render();});$('steps').append(button);
   }
   $('previous').disabled=position===0;$('next').disabled=position===steps.length-1;

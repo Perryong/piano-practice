@@ -41,3 +41,11 @@ This is a teaching adaptation of the user's Piano Seeds STUDIO PDF, not an exact
 The right hand plays one melody note at a time, mostly an octave below the score. The low transition in source bar 27 is kept up so the hands do not cross. The left hand plays a single held bass note instead of the source chords and arpeggios. Sixteenth-note decorations and the short triplet are simplified into eighth-note rhythms, and the final rolled/accumulating chord is reduced to a held bass note. Tempo is steady; expressive slowdowns, fermatas and pedal are not reproduced. All notes fit C2–C7.
 
 Choose the piece, start at 30 BPM, and practise the right hand from bar 2. Add the left hand once the melody feels comfortable. The repeat-bar option and separate-hand controls work with this piece.
+
+## Suggested finger numbers
+
+Both built-in songs include phrase-based suggestions for each hand. Numbers appear beside the current note, on the highlighted close-up key, and in the step-by-step strip, including held notes. The same numbering applies to both hands: 1 thumb, 2 index, 3 middle, 4 ring, 5 little. Reposition the hand for a new phrase rather than trying to keep one fixed position throughout a song. These suggestions may be adjusted for comfort and hand size.
+
+Merry Christmas bar 47 gives the same E6 key to both staves. With both hands selected, the right hand plays that shared note; left-hand-only practice still shows its own finger suggestion. Notes and playback timing are unchanged.
+
+Practice imports may optionally include a `fingers` array alongside `notes`, with one integer from 1 to 5 per note, for example `{"notes":["E4"],"duration":2,"fingers":[2]}`. Files without finger numbers continue to work. Duplicate detection compares music rather than finger suggestions, so old imports do not create a second copy of a built-in song.

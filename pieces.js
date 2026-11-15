@@ -4153,3 +4153,100 @@ export const oneSummerDayEasy = {
   composer: 'Joe Hisaishi · Simplified from Piano Seeds STUDIO · Melody starts in bar 2',
   bars: summerEasyBars.map(([right, left]) => ({meter: '4/4', left: summerEvents(left), right: summerEvents(right)}))
 };
+
+// Suggested fingerings are chosen by phrase and hand position, not by key name.
+// 1 = thumb, 2 = index, 3 = middle, 4 = ring, 5 = little finger.
+function assignFingers(bar, hand, pattern) {
+  const fingers = pattern ? pattern.split(' ').map(Number) : [];
+  let index = 0;
+  for (const event of bar[hand]) event.fingers = event.notes.map(() => fingers[index++]);
+  if (index !== fingers.length || fingers.some(f => !Number.isInteger(f) || f < 1 || f > 5)) {
+    throw new Error('Fingering plan does not match the notes');
+  }
+}
+const merryMainFingers = [
+  ['1 2 5', '4 5 4 1 4'], // 17
+  ['2', '2 3 2 3 5 3'],
+  ['1 2 5', '4 5 4 1 3'],
+  ['3', '5 4 2 1'],
+  ['1 2 5', '4 5 4 1 4'],
+  ['2', '2 3 2 3 5 3'],
+  ['1 2 3', '4 5 4 3 1'],
+  ['2 2 1', '4 5 4 1 4'],
+  ['4 3 1 3 4 3 1 3', '2 3 2 3 5 3'],
+  ['2 1 2 5 3', '4 5 4 1 3'],
+  ['3 1 3 5', '5 4 2 1'],
+  ['2 2 1 2 5', '4 5 4 1 4'],
+  ['2', '2 3 2 3 5 3'],
+  ['1 2 3', '4 5 4 3 1'],
+  ['2 1 2 5 2 2 1', '4 5 4 1 4'], // 31
+  ['4 3 1 3 4 3 1 3', '2 3 2 3 5 3'],
+  ['2 1 2 5 3', '4 5 4 1 3'],
+  ['3 1 3 5', '5 4 2 1'],
+  ['2 1 2 5 2 1 2 5', '4 5 4 1 4'],
+  ['2', '2 3 2 3 5 3'],
+  ['1 2 3', '4 5 4 3 1'],
+  ['2', '4 2 3 5 4 2 3 4'],
+  ['2 1 2 5 2 2 1', '4 5 4 1 4'],
+  ['4 3 1 3 4 3 1 3', '2 3 2 3 5 3'],
+  ['2 1 2 5 3', '4 5 4 1 3'],
+  ['3 1 3 5', '5 4 2 1'],
+  ['2 2 1 2 5', '4 5 4 1 4'],
+  ['2', '2 3 2 3 5 3'],
+  ['1 2 3', '4 5 4 3 1'],
+  ['1', '1 3 2'],
+  ['1 1 1 1', '3 3 3 3'] // 47: when both hands are selected, use right hand for the shared key.
+];
+merryChristmas.bars.forEach((bar, index) => {
+  if (index < 16 || index >= 47) {
+    const left = {E6:1, D6:2, C6:3, B5:4, A5:5};
+    const right = {E6:1, G6:1, A6:2, B6:3};
+    assignFingers(bar, 'left', bar.left.flatMap(e => e.notes.map(n => left[n])).join(' '));
+    assignFingers(bar, 'right', bar.right.flatMap(e => e.notes.map(n => index === 3 && n === 'G6' ? 3 : right[n])).join(' '));
+  } else {
+    assignFingers(bar, 'left', merryMainFingers[index - 16][0]);
+    assignFingers(bar, 'right', merryMainFingers[index - 16][1]);
+  }
+});
+const summerFingers = [
+  ['5', ''],
+  ['5', '2 2 2 2 1 2 5'],
+  ['5', '2 1'],
+  ['5', '2 2 2 2 1 2 5'],
+  ['5', '4 3 2 3 1 2'],
+  ['5', '3 3 3 3 3 1 2'],
+  ['5', '3 3 3 3 2 3 1 2'],
+  ['5', '1 1 1 1 1 5 1'],
+  ['5 4', '2'],
+  ['5', '2 2 2 2 1 2 5'],
+  ['5', '2 1'],
+  ['5', '2 2 2 2 1 2 5'],
+  ['5', '4 3 2 3 1 2'],
+  ['5', '3 3 3 3 3 1 2'],
+  ['5', '3 3 3 3 2 3 1 2'],
+  ['5', '1 1 1 1 1 5 4 3'],
+  ['5', '1 2 3'],
+  ['4 5', '5 5 5 4 3 2'],
+  ['5 1', '2 3 1 3 4'],
+  ['4 5', '5 5 5 5 5 4 3 2'],
+  ['5 3', '2 3 1 1 2'],
+  ['5', '5 1 3'],
+  ['1 5', '2 3 1 4 5'],
+  ['5 1', '4 4 5 4 3 1 2'],
+  ['4 5', '5 5 4 3 4 4'],
+  ['3 5', '5 4 4 3 4 1 4'],
+  ['5 3', '1 2 1 3 4'],
+  ['5 1', '4 4 5 4 3 1 2'],
+  ['4 5', '5 5 4 3 4 4'],
+  ['4 5', '4 3 3 2 3 4 5'],
+  ['4 5', '3 2 2 1 2 1 3'],
+  ['3 4', '5 2 3'],
+  ['5', '3 3 2 3'],
+  ['5', '5 1 4 3'],
+  ['5', '5 1 2'],
+  ['5', '1 2 5']
+];
+oneSummerDayEasy.bars.forEach((bar, index) => {
+  assignFingers(bar, 'left', summerFingers[index][0]);
+  assignFingers(bar, 'right', summerFingers[index][1]);
+});

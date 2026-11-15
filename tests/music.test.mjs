@@ -34,3 +34,38 @@ test('duplicate practice files match by title and notes, not display credits',as
   duplicate.bars[0].right[0].notes=['E4'];
   assert.equal(sameSong(original,duplicate),false);
 });
+
+test('both complete songs have suggested fingers for every note and held step',async()=>{
+  const {merryChristmas,oneSummerDayEasy}=await import('../pieces.js');
+  for(const original of [merryChristmas,oneSummerDayEasy]){
+    const song=validateSong(original);
+    for(const bar of song.bars)for(const hand of ['left','right'])for(const event of bar[hand]){
+      assert.equal(event.fingers?.length,event.notes.length);
+      for(const finger of event.fingers)assert.ok(Number.isInteger(finger)&&finger>=1&&finger<=5);
+    }
+    for(const step of buildSteps(song))for(const hand of ['left','right'])assert.equal(step[hand].fingers.length,step[hand].notes.length);
+  }
+  assert.deepEqual(buildSteps(merryChristmas)[0].left.fingers,[1]);
+  assert.deepEqual(buildSteps(merryChristmas)[3].right.fingers,[2]);
+  assert.deepEqual(buildSteps(oneSummerDayEasy)[9].right.fingers,[2]);
+});
+
+test('optional imported finger numbers validate without changing song identity',async()=>{
+  const {sameSong}=await import('../music.js');
+  const plain=score(),withFingers=score();
+  withFingers.bars[0].right[0].fingers=[1];
+  assert.deepEqual(validateSong(withFingers).bars[0].right[0].fingers,[1]);
+  assert.equal(sameSong(plain,withFingers),true);
+  for(const fingers of [[0],[6],[1,2],['2'],null]){withFingers.bars[0].right[0].fingers=fingers;assert.throws(()=>validateSong(withFingers));}
+});
+
+test('shared Merry Christmas key uses right hand when both hands practise',async()=>{
+  const {handView}=await import('../music.js');
+  const {merryChristmas}=await import('../pieces.js');
+  const step=buildSteps({bars:[merryChristmas.bars[46]]})[0];
+  assert.deepEqual(handView(step,'left','both').notes,[]);
+  assert.equal(handView(step,'left','both').shared,true);
+  assert.deepEqual(handView(step,'right','both').fingers,[3]);
+  assert.deepEqual(handView(step,'left','left').fingers,[1]);
+  assert.equal(handView(step,'right','left').enabled,false);
+});

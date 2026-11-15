@@ -6,7 +6,8 @@ export function noteNumber(note) {
   if (number<36 || number>96) throw new Error(`${note} is outside this 61-key keyboard (C2–C7).`);
   return number;
 }
-export const sameSong = (a,b) => a.title===b.title && JSON.stringify(a.bars)===JSON.stringify(b.bars);
+const musicalContent = song => song.bars.map(bar => [bar.meter,...['left','right'].map(hand => bar[hand].map(e => [e.notes,e.duration]))]);
+export const sameSong = (a,b) => a.title===b.title && JSON.stringify(musicalContent(a))===JSON.stringify(musicalContent(b));
 export const noteName = number => ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'][number%12]+(Math.floor(number/12)-1);
 export const frequency = note => 440 * 2 ** ((noteNumber(note)-69)/12);
 export function validateSong(input) {
@@ -23,7 +24,12 @@ export function validateSong(input) {
         if(!event || !Number.isFinite(event.duration) || !Number.isInteger(event.duration*2) || event.duration<0.5 || event.duration>total || !Array.isArray(event.notes) || event.notes.length>10) throw new Error(`Bar ${index+1}: invalid note or duration.`);
         const numbers=event.notes.map(noteNumber);
         if(new Set(numbers).size!==numbers.length) throw new Error(`Bar ${index+1}: a chord repeats the same key.`);
-        return {notes:event.notes.slice(),duration:event.duration};
+        const result={notes:event.notes.slice(),duration:event.duration};
+        if(event.fingers!==undefined){
+          if(!Array.isArray(event.fingers)||event.fingers.length!==event.notes.length||event.fingers.some(f=>!Number.isInteger(f)||f<1||f>5)) throw new Error(`Bar ${index+1}: use one finger number (1–5) for each note.`);
+          result.fingers=event.fingers.slice();
+        }
+        return result;
       });
       if(result[hand].reduce((sum,event)=>sum+event.duration,0)!==total) throw new Error(`Bar ${index+1}: ${hand} hand must total ${total} eighth-note steps.`);
     }
@@ -35,7 +41,7 @@ export function buildSteps(song) {
   const result=[];
   song.bars.forEach((bar,barIndex)=>{
     const resolution=[...bar.left,...bar.right].some(e=>!Number.isInteger(e.duration))?2:1;
-    const expand=events=>events.flatMap(event=>Array.from({length:event.duration*resolution},(_,i)=>({notes:event.notes,press:i===0,remaining:event.duration-i/resolution})));
+    const expand=events=>events.flatMap(event=>Array.from({length:event.duration*resolution},(_,i)=>({notes:event.notes,fingers:event.fingers||[],press:i===0,remaining:event.duration-i/resolution})));
     const left=expand(bar.left),right=expand(bar.right);
     left.forEach((event,tick)=>result.push({bar:barIndex,tick,meter:bar.meter,unit:1/resolution,left:event,right:right[tick]}));
   });
@@ -55,3 +61,10 @@ export const exercises=[
   merryChristmas,
   oneSummerDayEasy
 ];
+
+export function handView(step,which,mode='both') {
+  const event=step[which],enabled=mode==='both'||mode===which;
+  const indices=enabled?event.notes.map((_,i)=>i).filter(i=>!(which==='left'&&mode==='both'&&step.right.notes.some(n=>noteNumber(n)===noteNumber(event.notes[i])))):[];
+  return {...event,enabled,shared:enabled&&indices.length<event.notes.length,
+    notes:indices.map(i=>event.notes[i]),fingers:event.fingers?.length?indices.map(i=>event.fingers[i]):[]};
+}
