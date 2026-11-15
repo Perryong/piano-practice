@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f7f3"><meta name="description" content="Learn your 61-key piano one note at a time. Slow playback, highlighted keys and private practice-file imports.">
+  <title>Small Steps · Piano practice</title>
+  <link rel="icon" href="./icon.svg" type="image/svg+xml"><link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <a class="brand" href="./"><span class="brand-icon" aria-hidden="true">♬</span><span>Small Steps<small>PIANO PRACTICE</small></span></a>
+    <div class="library-heading">YOUR PRACTICE ROOM <span>61 keys</span></div>
+    <nav id="library" aria-label="Practice pieces"></nav>
+    <button class="import-button" id="import">＋ Add a practice file</button>
+    <input type="file" id="file" accept=".json,application/json" hidden>
+    <p class="local-note">Your imported music stays in this browser.</p>
+    <div class="sidebar-bottom"><span class="tiny-keyboard" aria-hidden="true">▥</span><p>Little by little.<br>One note at a time.</p></div>
+  </aside>
+  <main>
+    <header class="page-header"><span class="eyebrow">A LITTLE PRACTICE, EVERY DAY</span><span class="mode-label"><i></i> Your own pace</span></header>
+    <div class="title-row"><div><h1 id="song-title">Your first five notes</h1><p id="song-description">Original beginner exercise</p></div><span class="level">BEGINNER</span></div>
+    <div class="notice" id="notice" role="status" hidden></div>
+    <section class="player" aria-label="Practice player">
+      <div class="player-top"><div><span class="eyebrow">LET’S TAKE IT SLOW</span><h2>Listen. Look. Play along.</h2></div><div class="bar-count" id="bar-count">Bar 1 of 4</div></div>
+      <div class="progress" role="progressbar" aria-label="Song progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progress-fill"></div></div>
+      <div class="transport">
+        <div class="play-controls"><button class="play" id="play" type="button">▶ <span>Play</span></button><button class="quiet" id="previous" type="button" aria-label="Previous step">←</button><button class="quiet" id="next" type="button" aria-label="Next step">→</button><span id="play-status" role="status">Ready when you are</span></div>
+        <label class="tempo" for="tempo"><span>Tempo <strong><output id="tempo-value">60</output> <small>BPM</small></strong></span><input type="range" id="tempo" min="20" max="120" step="5" value="60"><span class="range-labels"><small>Slower</small><small>Faster</small></span></label>
+      </div>
+      <div class="practice-options"><label>Jump to bar <select id="bar" aria-label="Jump to bar"></select></label><label>Practise <select id="hand" aria-label="Choose hands"><option value="both">Both hands</option><option value="right">Right hand</option><option value="left">Left hand</option></select></label><label class="repeat"><input type="checkbox" id="repeat"> Repeat this bar</label></div>
+    </section>
+    <section class="keyboard-section" aria-label="61-key piano keyboard">
+      <div class="section-top"><h2>Your keyboard</h2><div class="legend"><span><i class="left-dot"></i>Left hand</span><span><i class="right-dot"></i>Right hand</span></div></div>
+      <div class="keyboard-frame"><div id="keyboard" class="keyboard full" role="img" aria-label="61-key keyboard from C2 to C7"></div></div>
+      <div class="octaves" id="octaves" aria-hidden="true"></div>
+      <p class="keyboard-caption">★ C4 is middle C. Key numbers count every black and white key from the left.</p>
+    </section>
+    <div class="hand-panels"><section class="hand-panel left-panel"><div class="hand-heading"><h3><i class="left-dot"></i>Left hand</h3><span id="left-action">Rest</span></div><div class="note-readout" id="left-note">—</div><div id="left-keyboard" class="keyboard closeup"></div></section><section class="hand-panel right-panel"><div class="hand-heading"><h3><i class="right-dot"></i>Right hand</h3><span id="right-action">Press</span></div><div class="note-readout" id="right-note">C4</div><div id="right-keyboard" class="keyboard closeup"></div></section></div>
+    <section class="notes-section"><div class="section-top"><h2>This bar, step by step</h2><span id="count" class="count">1 and 2 and 3 and 4 and</span></div><div id="steps" class="step-grid"></div><p class="section-hint">Tap a step to start there. Each step is an eighth note, or a sixteenth in finer passages. Keep holding when you see “Hold”.</p></section>
+    <details class="help"><summary>New to piano? Start here.</summary><div><p>Find the black keys in groups of two and three. C is the white key just to the left of a group of two black keys. The white keys repeat C, D, E, F, G, A, B.</p><p>Choose “Your first five notes”, set the tempo to 30 BPM, and press Play. Follow the highlighted keys with your right hand. Practise one bar before moving on.</p><p>To add a piece, upload its sheet-music PDF in your chat and ask for a Small Steps practice JSON file. Add that file here. PDF pictures themselves cannot be played automatically.</p><p>This player uses synthesized tones. It shows which keys to play; it does not listen to or grade your real keyboard.</p><button class="text-button" id="example">Download a sample practice file</button></div></details>
+    <footer>Made for small beginnings.<span>61 keys. Plenty of possibilities.</span></footer>
+  </main>
+</div>
+</body>
+</html>
