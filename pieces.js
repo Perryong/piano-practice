@@ -4098,3 +4098,58 @@ export const merryChristmas = {
     }
   ]
 };
+
+// Easy adaptation of the user's Piano Seeds STUDIO PDF, source bars 5–40.
+// The optional four-bar introduction is omitted. Short ornaments are simplified.
+const summerEasyBars = [
+  // Source 5–13: opening melody; a single bass note replaces each chord.
+  ['-:8', 'F3:8'],
+  ['- E4 E4 E4 E4 D4 E4 A4', 'F3:8'],
+  ['E4:2 D4:6', 'F3:8'],
+  ['- D4 D4 D4 D4 C4 D4 G4', 'A2:8'],
+  ['D4 C4 B3 C4:3 A3 B3', 'A2:8'],
+  ['C4 C4 C4 C4 C4:2 A3 B3', 'G3:8'],
+  ['C4 C4 C4 C4 B3 C4 A3 B3', 'F3:8'],
+  ['C4 C4 C4 C4 C4 G4:2 C4', 'E3:8'],
+  ['D4:8', 'D3:4 E3:4'],
+  // Source 14–21: the theme returns, with the same easier rhythm.
+  ['- E4 E4 E4 E4 D4 E4 A4', 'F3:8'],
+  ['E4:2 D4:6', 'F3:8'],
+  ['- D4 D4 D4 D4 C4 D4 G4', 'E3:8'],
+  ['D4 C4 B3 C4:3 A3 B3', 'E3:8'],
+  ['C4 C4 C4 C4 C4:2 A3 B3', 'D3:8'],
+  ['C4 C4 C4 C4 B3 C4 A3 B3', 'E3:8'],
+  ['C4 C4 C4 C4 C4 G4 F4 Eb4', 'F3:8'],
+  ['D4:4 E4:2 F4:2', 'G3:8'],
+  // Source 22–27: accompaniment is reduced to one or two long bass notes.
+  ['G4:2 G4:2 G4 F4 E4 D4', 'F3:4 E3:4'],
+  ['D4 E4 C4:2 -:2 E4 F4', 'A2:4 G3:4'],
+  ['G4 G4 G4 G4 G4 F4 E4 D4', 'F3:4 E3:4'],
+  ['D4 E4 C4:2 -:2 C4 D4', 'A2:4 C3:4'],
+  ['E4:3 A3 C4:4', 'D3:8'],
+  ['E4:2 F4:2 D4:2 A4 B4', 'F3:4 G2:4'],
+  // Source 28–35: the higher melody is brought down one octave.
+  ['C5 C5 D5 C5 B4:2 E4 G4', 'A2:4 G3:4'],
+  ['A4 A4 G4 F4 G4:3 G4', 'F3:4 E3:4'],
+  ['G4 F4 F4 Eb4 F4:2 C4 F4', 'Eb3:4 C3:4'],
+  ['G4:3 Ab4 G4:2 A4 B4', 'Eb3:4 G3:4'],
+  ['C5 C5 D5 C5 B4:2 E4 G4', 'A2:4 G3:4'],
+  ['A4 A4 G4 F4 G4:3 G4', 'F3:4 E3:4'],
+  ['G4 F4 F4 Eb4 F4:2 G4 Ab4', 'Eb3:4 D3:4'],
+  ['Bb4 Ab4 Ab4 G4 Ab4:2 G4 Bb4', 'Db3:4 C3:4'],
+  // Source 36–40: ending, without the rolled and accumulating chords.
+  ['C5:4 -:2 Ab4 Bb4', 'F2:4 Eb2:4'],
+  ['C5:4 - C5 B4 C5', 'D3:8'],
+  ['D5:4 - G4 C5 B4', 'G2:8'],
+  ['C5:2 -:4 A3 B3', 'F3:8'],
+  ['A4 B4 E5:6', 'F3:8']
+];
+const summerEvents = text => text.split(' ').map(token => {
+  const [note, duration = '1'] = token.split(':');
+  return {notes: note === '-' ? [] : [note], duration: Number(duration)};
+});
+export const oneSummerDayEasy = {
+  title: 'One Summer’s Day — Easy 61 keys',
+  composer: 'Joe Hisaishi · Simplified from Piano Seeds STUDIO · Melody starts in bar 2',
+  bars: summerEasyBars.map(([right, left]) => ({meter: '4/4', left: summerEvents(left), right: summerEvents(right)}))
+};

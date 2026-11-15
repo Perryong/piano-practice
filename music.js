@@ -1,4 +1,4 @@
-import {merryChristmas} from './pieces.js';
+import {merryChristmas,oneSummerDayEasy} from './pieces.js';
 export function noteNumber(note) {
   const match = typeof note === 'string' && /^([A-G])([#b]?)([2-7])$/.exec(note);
   if (!match) throw new Error(`Invalid note: ${String(note).slice(0,20)}. Use names like C4 or F#4.`);
@@ -6,6 +6,7 @@ export function noteNumber(note) {
   if (number<36 || number>96) throw new Error(`${note} is outside this 61-key keyboard (C2–C7).`);
   return number;
 }
+export const sameSong = (a,b) => a.title===b.title && JSON.stringify(a.bars)===JSON.stringify(b.bars);
 export const noteName = number => ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'][number%12]+(Math.floor(number/12)-1);
 export const frequency = note => 440 * 2 ** ((noteNumber(note)-69)/12);
 export function validateSong(input) {
@@ -51,5 +52,6 @@ export const exercises=[
     {meter:'4/4',left:[event('G3',8)],right:['D4','G4','B4','G4'].map(n=>event(n))},
     {meter:'4/4',left:[event('C3',8)],right:[event('E4',2),event('D4',2),event('C4',4)]}
   ]},
-  merryChristmas
+  merryChristmas,
+  oneSummerDayEasy
 ];

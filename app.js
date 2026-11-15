@@ -1,8 +1,9 @@
-import {noteNumber,noteName,frequency,validateSong,buildSteps,exercises} from './music.js';
+import {noteNumber,noteName,frequency,validateSong,buildSteps,exercises,sameSong} from './music.js';
 const $=id=>document.getElementById(id);
 const STORAGE='small-steps-piano-v1';
 let imported=[],saved={};
 try { const data=JSON.parse(localStorage.getItem(STORAGE)||'{}');saved=data.settings||{};if(Array.isArray(data.songs))imported=data.songs.slice(0,10).map(s=>validateSong(s)); } catch { /* A corrupt or unavailable cache never prevents practice. */ }
+imported=imported.filter((song,index)=>!exercises.some(builtIn=>sameSong(song,builtIn)) && imported.findIndex(other=>sameSong(song,other))===index);
 const library=()=>[...exercises,...imported];
 let song=library()[Number.isInteger(saved.song)?Math.min(Math.max(0,saved.song),library().length-1):0],steps=buildSteps(song),position=0;
 let bpm=Number.isFinite(saved.bpm)?Math.min(120,Math.max(20,saved.bpm)):60;
@@ -113,6 +114,8 @@ $('file').addEventListener('change',async()=>{
   try{
     if(file.size>1024*1024)throw new Error('Please use a practice file smaller than 1 MB.');
     const item=validateSong(JSON.parse(await file.text()));
+    const existing=library().find(song=>sameSong(song,item));
+    if(existing){selectSong(existing);message('This piece is already in your library. Kept one copy.');return;}
     if(imported.length>=10)throw new Error('This browser already holds 10 imported pieces. Use another browser profile for more.');
     imported.push(item);selectSong(item);message('Added '+item.title+'. Your notes are saved only in this browser.');
   }catch(error){message(error instanceof SyntaxError?'That file is not a practice JSON file. Upload the PDF in your chat first and ask for a Small Steps practice file.':error.message);}
