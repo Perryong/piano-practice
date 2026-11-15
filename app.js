@@ -60,7 +60,7 @@ function makeStepCell(step,index,interactive=false) {
   for(const which of ['left','right']){
     const label=document.createElement('span');label.className=which==='left'?'note-l':'note-r';
     const e=handView(step,which,hand);
-    label.textContent=(which==='left'?'L ':'R ')+(e.shared&&!e.notes.length?'Use R':e.notes.length?(!e.press?'Hold'+(interactive?'':' '+e.notes.join('+')):e.notes.join('+')):'—');
+    label.textContent=(e.shared&&!e.notes.length?'Use right hand':e.notes.length?(!e.press?'Hold'+(interactive?'':' '+e.notes.join('+')):e.notes.join('+')):'—');
     if(e.notes.length&&e.fingers.length){const f=document.createElement('span');f.className='step-fingers';f.textContent='Finger '+e.fingers.join('+');label.append(f);}
     cell.append(label);
   }
