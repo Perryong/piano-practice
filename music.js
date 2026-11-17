@@ -1,4 +1,5 @@
 import {merryChristmas,oneSummerDayEasy} from './pieces.js';
+import {goldenHourEasy,callOfSilenceEasy} from './easy-pieces.js';
 export function noteNumber(note) {
   const match = typeof note === 'string' && /^([A-G])([#b]?)([2-7])$/.exec(note);
   if (!match) throw new Error(`Invalid note: ${String(note).slice(0,20)}. Use names like C4 or F#4.`);
@@ -14,8 +15,8 @@ export function validateSong(input) {
   if (!input || typeof input!=='object' || typeof input.title!=='string' || !input.title.trim() || input.title.length>100) throw new Error('A practice file needs a title of 1–100 characters.');
   if (!Array.isArray(input.bars) || input.bars.length<1 || input.bars.length>500) throw new Error('A practice file needs 1–500 bars.');
   const bars=input.bars.map((bar,index)=>{
-    if (!bar || !['3/4','4/4','12/8'].includes(bar.meter)) throw new Error(`Bar ${index+1}: use 3/4, 4/4 or 12/8.`);
-    const total=bar.meter==='3/4'?6:bar.meter==='4/4'?8:12;
+    if (!bar || !['3/4','4/4','6/8','12/8'].includes(bar.meter)) throw new Error(`Bar ${index+1}: use 3/4, 4/4, 6/8 or 12/8.`);
+    const total=['3/4','6/8'].includes(bar.meter)?6:bar.meter==='4/4'?8:12;
     const result={meter:bar.meter};
     for(const hand of ['left','right']) {
       const events=bar[hand];
@@ -59,7 +60,9 @@ export const exercises=[
     {meter:'4/4',left:[event('C3',8)],right:[event('E4',2),event('D4',2),event('C4',4)]}
   ]},
   merryChristmas,
-  oneSummerDayEasy
+  oneSummerDayEasy,
+  callOfSilenceEasy,
+  goldenHourEasy
 ];
 
 export function handView(step,which,mode='both') {

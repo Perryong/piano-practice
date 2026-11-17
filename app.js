@@ -50,7 +50,7 @@ function handDisplay(which,event) {
   keyboard($(which+'-keyboard'),base,Math.min(96,end),which==='left'?notes:[],which==='right'?notes:[],true,new Map(notes.map((n,i)=>[noteNumber(n),event.fingers[i]])));
 }
 const noteDescription = e => !e.enabled?'not playing':e.shared&&!e.notes.length?'shared key, use right hand':e.notes.map((n,i)=>n+(e.fingers[i]?' finger '+e.fingers[i]:'')).join(', ')||'rest';
-function countLabel(step) { const t=step.tick*step.unit;return step.meter==='12/8'?(Math.floor(t/3)+1)+(Number.isInteger(t)?['',' and',' a'][t%3]:' +'):(Math.floor(t/2)+1)+['',' e',' and',' a'][Math.round(t*2)%4];}
+function countLabel(step) { const t=step.tick*step.unit;return step.meter.endsWith('/8')?(Math.floor(t/3)+1)+(Number.isInteger(t)?['',' and',' a'][t%3]:' +'):(Math.floor(t/2)+1)+['',' e',' and',' a'][Math.round(t*2)%4];}
 function makeStepCell(step,index,interactive=false) {
   const cell=document.createElement(interactive?'button':'div');cell.className='step';
   if(interactive)cell.type='button';else cell.setAttribute('role','group');
@@ -77,7 +77,7 @@ function renderFullPiece() {
     button.id='full-bar-'+(barIndex+1);bar.setAttribute('aria-labelledby',button.id);
     button.addEventListener('click',()=>{stop();finished=false;position=group[0].index;render();});
     title.append(button);const meter=document.createElement('span');meter.textContent=group[0].step.meter;heading.append(title,meter);
-    const grid=document.createElement('div');grid.className='step-grid'+(group[0].step.meter==='12/8'?' compound':'');
+    const grid=document.createElement('div');grid.className='step-grid'+(group[0].step.meter.endsWith('/8')?' compound':'');
     for(const {step,index} of group){const cell=makeStepCell(step,index);fullCells[index]=cell;grid.append(cell);}
     bar.append(heading,grid);fullBars.push(bar);fragment.append(bar);
   });
@@ -102,7 +102,7 @@ function render() {
   $('octaves').replaceChildren(...[36,48,60,72,84,96].map((n,i)=>{const label=document.createElement('span');label.style.left=(i===5?100:(i*7+.5)/36*100)+'%';label.textContent=noteName(n)+(n===60?' ★':'');return label;}));
   handDisplay('left',left);handDisplay('right',right);
   $('count').textContent=(s.meter+' · ')+'Count '+countLabel(s);
-  const barSteps=steps.map((step,i)=>({...step,index:i})).filter(step=>step.bar===s.bar);$('steps').classList.toggle('compound',s.meter==='12/8');$('steps').replaceChildren();
+  const barSteps=steps.map((step,i)=>({...step,index:i})).filter(step=>step.bar===s.bar);$('steps').classList.toggle('compound',s.meter.endsWith('/8'));$('steps').replaceChildren();
   for(const step of barSteps){const cell=makeStepCell(step,step.index,true);cell.classList.toggle('active',step.index===position);$('steps').append(cell);}
   updateFullPiece();
   $('previous').disabled=position===0;$('next').disabled=position===steps.length-1;

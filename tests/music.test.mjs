@@ -69,3 +69,33 @@ test('shared Merry Christmas key uses right hand when both hands practise',async
   assert.deepEqual(handView(step,'left','left').fingers,[1]);
   assert.equal(handView(step,'right','left').enabled,false);
 });
+
+test('6/8 keeps six eighth-note playback steps, distinct from 12/8',()=>{
+  const song=score();song.bars[0].meter='6/8';
+  song.bars[0].left[0].duration=6;song.bars[0].right=[{notes:['E4'],duration:3},{notes:['F4'],duration:3}];
+  const steps=buildSteps(validateSong(song));
+  assert.equal(steps.length,6);assert.equal(steps[3].right.press,true);assert.equal(steps[0].unit,1);
+  song.bars[0].right[1].duration=5;assert.throws(()=>validateSong(song));
+});
+
+test('new easy editions cover both supplied scores with playable hands and fingers',async()=>{
+  const {goldenHourEasy,callOfSilenceEasy}=await import('../easy-pieces.js');
+  for(const [original,count,meter] of [[goldenHourEasy,80,'6/8'],[callOfSilenceEasy,69,'4/4']]){
+    assert.equal(exercises.filter(s=>s.title===original.title).length,1);
+    const song=validateSong(original),steps=buildSteps(song);
+    assert.equal(song.bars.length,count);
+    for(const bar of song.bars){
+      assert.equal(bar.meter,meter);
+      for(const hand of ['left','right'])for(const e of bar[hand]){
+        assert.ok(e.notes.length<=1);assert.ok(Number.isInteger(e.duration));
+        assert.equal(e.fingers.length,e.notes.length);
+        for(const f of e.fingers)assert.ok(f>=1&&f<=5);
+      }
+    }
+    for(const s of steps)if(s.left.notes.length&&s.right.notes.length)assert.ok(noteNumber(s.left.notes[0])<noteNumber(s.right.notes[0]),'Hands stay apart');
+    assert.equal(steps.length,count*(meter==='6/8'?6:8));
+  }
+  assert.deepEqual(goldenHourEasy.bars[0].right.map(e=>e.notes[0]),['D4','E4','G4','A4','G4','E4']);
+  assert.deepEqual(callOfSilenceEasy.bars[0].right.map(e=>e.notes),[[],['A4'],['C5']]);
+  assert.deepEqual(callOfSilenceEasy.bars.at(-1).right[0].notes,['B4']);
+});
