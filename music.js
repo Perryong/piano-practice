@@ -1,5 +1,5 @@
 import {merryChristmas,oneSummerDayEasy} from './pieces.js';
-import {goldenHourEasy,callOfSilenceEasy} from './easy-pieces.js';
+import {goldenHourEasy} from './easy-pieces.js';
 export function noteNumber(note) {
   const match = typeof note === 'string' && /^([A-G])([#b]?)([2-7])$/.exec(note);
   if (!match) throw new Error(`Invalid note: ${String(note).slice(0,20)}. Use names like C4 or F#4.`);
@@ -61,7 +61,6 @@ export const exercises=[
   ]},
   merryChristmas,
   oneSummerDayEasy,
-  callOfSilenceEasy,
   goldenHourEasy
 ];
 

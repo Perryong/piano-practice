@@ -78,9 +78,9 @@ test('6/8 keeps six eighth-note playback steps, distinct from 12/8',()=>{
   song.bars[0].right[1].duration=5;assert.throws(()=>validateSong(song));
 });
 
-test('new easy editions cover both supplied scores with playable hands and fingers',async()=>{
-  const {goldenHourEasy,callOfSilenceEasy}=await import('../easy-pieces.js');
-  for(const [original,count,meter] of [[goldenHourEasy,80,'6/8'],[callOfSilenceEasy,69,'4/4']]){
+test('golden hour easy edition has playable hands and fingers',async()=>{
+  const {goldenHourEasy}=await import('../easy-pieces.js');
+  for(const [original,count,meter] of [[goldenHourEasy,80,'6/8']]){
     assert.equal(exercises.filter(s=>s.title===original.title).length,1);
     const song=validateSong(original),steps=buildSteps(song);
     assert.equal(song.bars.length,count);
@@ -95,7 +95,6 @@ test('new easy editions cover both supplied scores with playable hands and finge
     for(const s of steps)if(s.left.notes.length&&s.right.notes.length)assert.ok(noteNumber(s.left.notes[0])<noteNumber(s.right.notes[0]),'Hands stay apart');
     assert.equal(steps.length,count*(meter==='6/8'?6:8));
   }
+  assert.equal(exercises.some(s=>s.title.includes('Call of Silence')),false);
   assert.deepEqual(goldenHourEasy.bars[0].right.map(e=>e.notes[0]),['D4','E4','G4','A4','G4','E4']);
-  assert.deepEqual(callOfSilenceEasy.bars[0].right.map(e=>e.notes),[[],['A4'],['C5']]);
-  assert.deepEqual(callOfSilenceEasy.bars.at(-1).right[0].notes,['B4']);
 });
